@@ -3,4 +3,4 @@ from .models import MovieInfo
 
 @admin.register(MovieInfo)
 class MovieInfoAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "release_date", "source_type")
+    list_display = ("name", "slug", "release_date", "source_type", "upload_source_code")
