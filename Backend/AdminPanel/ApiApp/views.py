@@ -8,7 +8,7 @@ from ApiApp.models import MovieInfo
 
 @csrf_exempt
 def get_movies(request):
-     movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type","duration","description","language","genres","cast","published")
+     movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published")
      movies_info = {"data":[]}
      for data in movies:
           movies_info["data"].append({
@@ -21,7 +21,7 @@ def get_movies(request):
                "thumbnail_url":data["thumbnail_url"],
                "source_url":data["source_url"],
                "screenshots":data["screenshots"],
-               "source_type":data["source_type"],
+               "source_type":data["source_type__name"],
                "duration":data["duration"],
                "description":data["description"],
                "language":str(data["language"]),
@@ -35,7 +35,7 @@ def get_movies(request):
 @csrf_exempt
 def movie_details(request):
      movie_id = request.POST.get("movie_id")
-     movies = MovieInfo.objects.filter(id=movie_id).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type","duration","description","language","genres","cast","published")
+     movies = MovieInfo.objects.filter(id=movie_id).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published")
      movies_info = {"data":[]}
      for data in movies:
           movies_info["data"].append({
@@ -48,7 +48,7 @@ def movie_details(request):
                "thumbnail_url":data["thumbnail_url"],
                "source_url":data["source_url"],
                "screenshots":data["screenshots"],
-               "source_type":data["source_type"],
+               "source_type":data["source_type__name"],
                "duration":data["duration"],
                "description":data["description"],
                "language":str(data["language"]),
@@ -61,8 +61,8 @@ def movie_details(request):
 
 @csrf_exempt
 def home_details(request):
-     movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
-     source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type","duration","description","language","genres","cast","published")
+     movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
+     source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published")
      movies_info ={"data": [{
                "section_name": "Banner",
                "data": []
@@ -90,7 +90,7 @@ def home_details(request):
                "thumbnail_url":data["thumbnail_url"],
                "source_url":data["source_url"],
                "screenshots":data["screenshots"],
-               "source_type":data["source_type"],
+               "source_type":data["source_type__name"],
                "duration":data["duration"],
                "description":data["description"],
                "language":str(data["language"]),
@@ -99,11 +99,11 @@ def home_details(request):
           })
 
      for data in source_data:
-          if data["source_type"]=="NetFlix":
+          if data["source_type__name"]=="NetFlix":
                index = 1
-          elif data["source_type"]=="Amazon":
+          elif data["source_type__name"]=="Amazon":
                index = 2
-          elif data["source_type"]=="Disney":
+          elif data["source_type__name"]=="Disney":
                index = 3
           else:
                break
@@ -117,7 +117,7 @@ def home_details(request):
                "thumbnail_url":data["thumbnail_url"],
                "source_url":data["source_url"],
                "screenshots":data["screenshots"],
-               "source_type":data["source_type"],
+               "source_type":data["source_type__name"],
                "duration":data["duration"],
                "description":data["description"],
                "language":str(data["language"]),
@@ -126,3 +126,34 @@ def home_details(request):
           })
 
      return HttpResponse(json.dumps(movies_info))
+
+
+@csrf_exempt
+def movie_search(request):
+     search_data = request.POST.get("search_data")
+     movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
+     if len(movies) == 0:
+          movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
+     movies_info = {"data":[]}
+     if len(movies) != 0:
+          for data in movies:
+               movies_info["data"].append({
+                    "id":data["id"],
+                    "name":data["name"],
+                    "slug":data["slug"],
+                    "release_date":str(data["release_date"]),
+                    "trailer_url":data["trailer_url"],
+                    "download_url":data["download_url"],
+                    "thumbnail_url":data["thumbnail_url"],
+                    "source_url":data["source_url"],
+                    "screenshots":data["screenshots"],
+                    "source_type":data["source_type__name"],
+                    "duration":data["duration"],
+                    "description":data["description"],
+                    "language":str(data["language"]),
+                    "genres":data["genres"],
+                    "cast":data["cast"],
+               })
+          return HttpResponse(json.dumps(movies_info))
+     else:
+          return HttpResponse(json.dumps("Movie not found! Please try again later."))
