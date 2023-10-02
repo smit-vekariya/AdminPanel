@@ -18,7 +18,6 @@ class MovieInfo(models.Model):
     thumbnail_url = models.CharField(max_length=900, null=True, blank=True)
     source_url = models.CharField(max_length=900, null=True, blank=True)
     screenshots = models.JSONField(null=True, blank=True)
-    source_type = models.CharField(max_length=200, null=True, blank=True)
     source_type = models.ForeignKey(SourceType, on_delete=models.CASCADE)
     duration = models.CharField(max_length=200, null=True, blank=True)
     size = models.CharField(max_length=200, null=True, blank=True)

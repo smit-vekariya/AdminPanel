@@ -11,36 +11,7 @@ def welcome(request):
           return render(request, template_name="ApiApp/welcome.html")
      except Exception as e:
           manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
-
-
-@csrf_exempt
-def get_movies(request):
-     try:
-          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published")
-          movies_info = {"data":[]}
-          for data in movies:
-               movies_info["data"].append({
-                    "id":data["id"],
-                    "name":data["name"],
-                    "slug":data["slug"],
-                    "release_date":str(data["release_date"]),
-                    "trailer_url":data["trailer_url"],
-                    "download_url":data["download_url"],
-                    "thumbnail_url":data["thumbnail_url"],
-                    "source_url":data["source_url"],
-                    "screenshots":data["screenshots"],
-                    "source_type":data["source_type__name"],
-                    "duration":data["duration"],
-                    "description":data["description"],
-                    "language":str(data["language"]),
-                    "genres":data["genres"],
-                    "cast":data["cast"],
-               })
-          return HttpResponse(json.dumps(movies_info))
-     except Exception as e:
-          manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
+          return HttpResponse(json.dumps({str(e)}))
 
 
 @csrf_exempt
@@ -79,7 +50,7 @@ def home_details(request):
      try:
           movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
           source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published")
-          movies_info ={"data": [{
+          movies_info = {"data": [{
                     "section_name": "Banner",
                     "data": []
                },
@@ -94,7 +65,7 @@ def home_details(request):
                {
                     "section_name": "Disney",
                     "data": []
-               }]}
+               }],"status": 1, "message":"success"}
           for data in movies:
                movies_info["data"][0]["data"].append({
                     "id":data["id"],
@@ -143,7 +114,7 @@ def home_details(request):
           return HttpResponse(json.dumps(movies_info))
      except Exception as e:
           manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
+          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
 
 
 @csrf_exempt
@@ -153,7 +124,7 @@ def movie_search(request):
           movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
           if len(movies) == 0:
                movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
-          movies_info = {"data":[]}
+          movies_info = {"data":[], "status": 1, "message": "success"}
           if len(movies) != 0:
                for data in movies:
                     movies_info["data"].append({
@@ -178,7 +149,7 @@ def movie_search(request):
                return HttpResponse(json.dumps("Movie not found! Please try again later."))
      except Exception as e:
           manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
+          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
 
 
 # from selenium import webdriver
