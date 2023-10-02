@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ApiApp',
+    'Account'
 ]
 
 MIDDLEWARE = [
@@ -63,7 +64,7 @@ ROOT_URLCONF = 'PRDownload.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['template'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -140,3 +141,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+API_KEY = env("API_KEY")

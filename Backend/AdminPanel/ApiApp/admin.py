@@ -9,3 +9,4 @@ class MovieInfoAdmin(admin.ModelAdmin):
 @admin.register(SourceType)
 class SourceTypeAdmin(admin.ModelAdmin):
     list_display = ("name",)
+

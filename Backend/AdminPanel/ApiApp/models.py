@@ -1,8 +1,6 @@
 from django.db import models
 from django.utils import timezone
-
-
-# Create your models here.
+from django.db import models
 
 class SourceType(models.Model):
     name = models.CharField(max_length=200, null=True, blank=True)
@@ -33,5 +31,4 @@ class MovieInfo(models.Model):
 
     def __str__(self):
         return self.name
-
 
