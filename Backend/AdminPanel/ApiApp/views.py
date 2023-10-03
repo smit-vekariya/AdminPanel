@@ -120,7 +120,7 @@ def home_details(request):
 @csrf_exempt
 def movie_search(request):
      try:
-          search_data = request.POST.get("search_data")
+          search_data = json.loads(request.body)["search_data"]
           movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
           if len(movies) == 0:
                movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
@@ -145,8 +145,29 @@ def movie_search(request):
                          "cast":data["cast"],
                     })
                return HttpResponse(json.dumps(movies_info))
+          elif len(movies) == 0 and search_data =="":
+               movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:10]
+               for data in movies:
+                    movies_info["data"].append({
+                         "id":data["id"],
+                         "name":data["name"],
+                         "slug":data["slug"],
+                         "release_date":str(data["release_date"]),
+                         "trailer_url":data["trailer_url"],
+                         "download_url":data["download_url"],
+                         "thumbnail_url":data["thumbnail_url"],
+                         "source_url":data["source_url"],
+                         "screenshots":data["screenshots"],
+                         "source_type":data["source_type__name"],
+                         "duration":data["duration"],
+                         "description":data["description"],
+                         "language":str(data["language"]),
+                         "genres":data["genres"],
+                         "cast":data["cast"],
+                    })
+               return HttpResponse(json.dumps(movies_info))
           else:
-               return HttpResponse(json.dumps("Movie not found! Please try again later."))
+               return HttpResponse(json.dumps({"data":[], "status": 1, "message": "success"}))
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
