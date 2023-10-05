@@ -55,11 +55,11 @@ def home_details(request):
                     "data": []
                },
                {
-                    "section_name": "NetFlix",
+                    "section_name": "Amazon",
                     "data": []
                },
                {
-                    "section_name": "Amazon",
+                    "section_name": "NetFlix",
                     "data": []
                },
                {
@@ -87,9 +87,9 @@ def home_details(request):
 
           for data in source_data:
                if data["source_type__name"]=="NetFlix":
-                    index = 1
-               elif data["source_type__name"]=="Amazon":
                     index = 2
+               elif data["source_type__name"]=="Amazon":
+                    index = 1
                elif data["source_type__name"]=="Disney":
                     index = 3
                else:
