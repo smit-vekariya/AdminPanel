@@ -9,6 +9,18 @@ class SourceType(models.Model):
         return self.name
 
 
+
+class CyberUser(models.Model):
+    username = models.CharField(max_length=100)
+    password = models.CharField(max_length=100)
+    cyber_access_token = models.TextField(null=True, blank=True)
+    account_id = models.IntegerField(null=True,blank=True)
+    is_active = models.BooleanField()
+
+    def __str__(self):
+        return self.username
+
+
 class MovieInfo(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=250)
@@ -26,8 +38,11 @@ class MovieInfo(models.Model):
     genres = models.CharField(max_length=200, null=True, blank=True)
     cast = models.CharField(max_length=200, null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    upload_source_code= models.CharField(max_length=200)
+    upload_source_code = models.CharField(max_length=200)
+    file_id = models.IntegerField(null=True,blank=True)
+    username = models.CharField(max_length=200, null=True, blank=True)
+    account_id = models.IntegerField(null=True,blank=True)
+    upload_by = models.ForeignKey(CyberUser,related_name='missions_assigned',on_delete=models.CASCADE, null=True,blank=True)
 
     def __str__(self):
         return self.name
-

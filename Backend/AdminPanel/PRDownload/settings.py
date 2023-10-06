@@ -145,3 +145,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 API_KEY = env("API_KEY")
+CYBER_FILE = env("CYBER_FILE")
