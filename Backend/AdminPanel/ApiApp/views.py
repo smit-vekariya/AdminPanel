@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from ApiApp.models import MovieInfo, CyberUser
+from ApiApp.models import MovieInfo, CyberUser, SourceType
 from Account import manager
 import time
 import requests
@@ -53,51 +53,33 @@ def home_details(request):
      try:
           movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id").order_by('-release_date')[:3]
           source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id")
-          movies_info = {"data": [{
-                    "section_name": "Banner",
-                    "data": []
-               },
-               {
-                    "section_name": "Amazon",
-                    "data": []
-               },
-               {
-                    "section_name": "NetFlix",
-                    "data": []
-               },
-               {
-                    "section_name": "Disney",
-                    "data": []
-               }],"status": 1, "message":"success"}
-          for data in movies:
-               movies_info["data"][0]["data"].append({
-                    "id":data["id"],
-                    "name":data["name"],
-                    "slug":data["slug"],
-                    "release_date":str(data["release_date"]),
-                    "trailer_url":data["trailer_url"],
-                    "download_url":data["download_url"],
-                    "thumbnail_url":data["thumbnail_url"],
-                    "source_url":data["source_url"],
-                    "screenshots":data["screenshots"],
-                    "source_type":data["source_type__name"],
-                    "duration":data["duration"],
-                    "description":data["description"],
-                    "language":str(data["language"]),
-                    "genres":data["genres"],
-                    "cast":data["cast"],
-               })
-
+          data_ = []
+          source_type = SourceType.objects.values("name")
+          data_.append({"section_name": "Banner", "data": []})
+          for ott in source_type:
+               data_.append({"section_name": ott["name"],"data": []})
           for data in source_data:
-               if data["source_type__name"]=="NetFlix":
-                    index = 2
-               elif data["source_type__name"]=="Amazon":
-                    index = 1
-               elif data["source_type__name"]=="Disney":
-                    index = 3
-               else:
-                    break
-               movies_info["data"][index]["data"].append({
+               for ot in data_:
+                    if ot["section_name"] == data["source_type__name"]:
+                         ot["data"].append({
+                              "id":data["id"],
+                              "name":data["name"],
+                              "slug":data["slug"],
+                              "release_date":str(data["release_date"]),
+                              "trailer_url":data["trailer_url"],
+                              "download_url":data["download_url"],
+                              "thumbnail_url":data["thumbnail_url"],
+                              "source_url":data["source_url"],
+                              "screenshots":data["screenshots"],
+                              "source_type":data["source_type__name"],
+                              "duration":data["duration"],
+                              "description":data["description"],
+                              "language":str(data["language"]),
+                              "genres":data["genres"],
+                              "cast":data["cast"],
+                         })
+          for data in movies:
+               data_[0]["data"].append({
                     "id":data["id"],
                     "name":data["name"],
                     "slug":data["slug"],
@@ -114,6 +96,8 @@ def home_details(request):
                     "genres":data["genres"],
                     "cast":data["cast"],
                })
+          data_ = [ot for ot in data_ if len(ot["data"]) != 0]
+          movies_info = {"data": data_,"status": 1, "message":"success"}
           return HttpResponse(json.dumps(movies_info))
      except Exception as e:
           manager.create_from_exception(e)
@@ -203,7 +187,7 @@ def download_link(request):
 
 
 @csrf_exempt
-def moive_scheduler(request):
+def movie_scheduler(request):
      try:
           data = json.loads(request.body)
           username = data["username"]
@@ -214,6 +198,13 @@ def moive_scheduler(request):
                account_id = token_and_id["account_id"]
                url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
                response = requests.request("GET", url).json()
+               file_ids = MovieInfo.objects.filter(upload_by__username=username).values("file_id")
+               file_ids =[id["file_id"] for id in file_ids]
+               for data in response["data"]["files"]:
+                    if data["id"] not in file_ids:
+                         name = data["filename"].split("(")[0]
+                         year = data["filename"].split("(")[1].split(")")[0]
+
                return HttpResponse(json.dumps({"data":[response], "status": 1, "message": "Movie fetch successfully."}))
      except Exception as e:
           manager.create_from_exception(e)

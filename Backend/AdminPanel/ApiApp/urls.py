@@ -15,5 +15,5 @@ urlpatterns = [
 
     #collect data
     path('authorize/',views.authorize,name="authorize"), #temp not use
-    path('moive_scheduler/',views.moive_scheduler,name="moive_scheduler"),
+    path('movie_scheduler/',views.movie_scheduler,name="movie_scheduler"),
 ]
