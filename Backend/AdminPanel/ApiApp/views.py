@@ -23,7 +23,7 @@ def welcome(request):
 def movie_details(request):
      try:
           movie_id = json.loads(request.body)["movie_id"]
-          movies = MovieInfo.objects.filter(id=movie_id).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published")
+          movies = MovieInfo.objects.filter(id=movie_id).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","imdb","size")
           movies_info = {"data":{}, "status": 1, "message": "success"}
           for data in movies:
                movies_info["data"].update({
@@ -42,6 +42,8 @@ def movie_details(request):
                     "language":str(data["language"]),
                     "genres":data["genres"],
                     "cast":data["cast"],
+                    "size":data["size"],
+                    "imdb":data["imdb"]
                })
           return HttpResponse(json.dumps(movies_info))
      except Exception as e:
@@ -49,12 +51,11 @@ def movie_details(request):
           return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
 
 
-
 @csrf_exempt
 def home_details(request):
      try:
-          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id").order_by('-release_date')[:3]
-          source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id")
+          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id","size","imdb").order_by('-release_date')[:3]
+          source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id","size","imdb")
           data_ = []
           source_type = SourceType.objects.values("name")
           data_.append({"section_name": "Banner", "data": []})
@@ -79,6 +80,8 @@ def home_details(request):
                               "language":str(data["language"]),
                               "genres":data["genres"],
                               "cast":data["cast"],
+                              "size":data["size"],
+                              "imdb":data["imdb"]
                          })
           for data in movies:
                data_[0]["data"].append({
@@ -97,6 +100,8 @@ def home_details(request):
                     "language":str(data["language"]),
                     "genres":data["genres"],
                     "cast":data["cast"],
+                    "size":data["size"],
+                    "imdb":data["imdb"]
                })
           data_ = [ot for ot in data_ if len(ot["data"]) != 0]
           movies_info = {"data": data_,"status": 1, "message":"success"}
@@ -110,9 +115,9 @@ def home_details(request):
 def movie_search(request):
      try:
           search_data = json.loads(request.body)["search_data"]
-          movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
+          movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:3]
           if len(movies) == 0:
-               movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published").order_by('-release_date')[:3]
+               movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:3]
           movies_info = {"data":[], "status": 1, "message": "success"}
           if len(movies) != 0:
                for data in movies:
@@ -132,6 +137,8 @@ def movie_search(request):
                          "language":str(data["language"]),
                          "genres":data["genres"],
                          "cast":data["cast"],
+                         "size":data["size"],
+                         "imdb":data["imdb"]
 
                     })
                return HttpResponse(json.dumps(movies_info))
@@ -154,6 +161,8 @@ def movie_search(request):
                          "language":str(data["language"]),
                          "genres":data["genres"],
                          "cast":data["cast"],
+                         "size":data["size"],
+                         "imdb":data["imdb"]
                     })
                return HttpResponse(json.dumps(movies_info))
           else:
