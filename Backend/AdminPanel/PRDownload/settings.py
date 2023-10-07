@@ -143,6 +143,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+#all related key and api
 
-API_KEY = env("API_KEY")
+SECRET_KEY = env("SECRET_KEY")
+
 CYBER_FILE = env("CYBER_FILE")
+
+OMDB_API = env("OMDB_API")
+OMDB_API_KEY = env("OMDB_API_KEY")

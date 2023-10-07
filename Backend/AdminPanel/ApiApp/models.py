@@ -15,6 +15,7 @@ class CyberUser(models.Model):
     password = models.CharField(max_length=100)
     cyber_access_token = models.TextField(null=True, blank=True)
     account_id = models.IntegerField(null=True,blank=True)
+    source_type = models.ForeignKey(SourceType, on_delete=models.CASCADE,null=True,blank=True)
     is_active = models.BooleanField()
 
     def __str__(self):
@@ -33,7 +34,7 @@ class MovieInfo(models.Model):
     source_type = models.ForeignKey(SourceType, on_delete=models.CASCADE)
     duration = models.CharField(max_length=200, null=True, blank=True)
     size = models.CharField(max_length=200, null=True, blank=True)
-    description = models.CharField(max_length=200, null=True, blank=True)
+    description = models.CharField(max_length=10000, null=True, blank=True)
     language = models.CharField(max_length=200, null=True, blank=True)
     genres = models.CharField(max_length=200, null=True, blank=True)
     cast = models.CharField(max_length=200, null=True, blank=True)
@@ -43,6 +44,7 @@ class MovieInfo(models.Model):
     username = models.CharField(max_length=200, null=True, blank=True)
     account_id = models.IntegerField(null=True,blank=True)
     upload_by = models.ForeignKey(CyberUser,related_name='missions_assigned',on_delete=models.CASCADE, null=True,blank=True)
+    imdb = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.name
