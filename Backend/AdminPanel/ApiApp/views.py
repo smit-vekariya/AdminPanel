@@ -205,18 +205,18 @@ def movie_scheduler(request):
                username = data["username"]
                password = data["password"]
                if username and password:
-                    token_and_id = json.loads(get_access_token(username, password))
-                    access_token = token_and_id["access_token"]
-                    account_id = token_and_id["account_id"]
-                    url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
-                    response = requests.request("GET", url).json()
-                    file_ids = MovieInfo.objects.filter(upload_by__username=username).values("file_id")
-                    file_ids =[id["file_id"] for id in file_ids]
-                    not_found_movie=[]
-                    found=[]
-                    bulk_list = list()
                     cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
                     if cyber_user:
+                         token_and_id = json.loads(get_access_token(username, password))
+                         access_token = token_and_id["access_token"]
+                         account_id = token_and_id["account_id"]
+                         url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
+                         response = requests.request("GET", url).json()
+                         file_ids = MovieInfo.objects.filter(upload_by__username=username).values("file_id")
+                         file_ids =[id["file_id"] for id in file_ids]
+                         not_found_movie=[]
+                         found=[]
+                         bulk_list = list()
                          for data in response["data"]["files"]:
                               if int(data["id"]) not in file_ids:
                                    name = data["filename"].split("(")[0]
@@ -239,32 +239,12 @@ def movie_scheduler(request):
                          MovieInfo.objects.bulk_create(bulk_list)
                          return HttpResponse(json.dumps({"data":[{"not found":not_found_movie,"found":found}], "status": 1, "message": "Movie fetch successfully."}))
                     else:
-                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or user is de-active."}))
+                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active."}))
                else:
                     return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found."}))
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
-
-
-@csrf_exempt
-def authorize(request):
-     try:
-          data =  json.loads(request.body)
-          username = data["username"]
-          password = data["password"]
-          if username and password:
-               token_and_id = json.loads(get_access_token(username, password))
-               account_id = token_and_id["account_id"]
-               access_token = token_and_id["access_token"]
-               CyberUser.objects.filter(account_id=account_id).update(cyber_access_token=access_token)
-               return HttpResponse(json.dumps({"data":[{"access_token":access_token}], "status": 1, "message": "Authentication successfully."}))
-          else:
-               return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username or password Required"}))
-     except Exception as e:
-          manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
-
 
 
 def get_access_token(username,password):

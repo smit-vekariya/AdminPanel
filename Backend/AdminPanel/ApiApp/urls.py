@@ -20,6 +20,5 @@ urlpatterns = [
     path_with_key('download_link/',views.download_link,name="download_link"),
 
     #collect data
-    path('authorize/',views.authorize,name="authorize"), #temp not use
     path('movie_scheduler/',views.movie_scheduler,name="movie_scheduler"),
 ]
