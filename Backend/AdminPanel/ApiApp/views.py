@@ -115,9 +115,9 @@ def home_details(request):
 def movie_search(request):
      try:
           search_data = json.loads(request.body)["search_data"]
-          movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:3]
+          movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:15]
           if len(movies) == 0:
-               movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:3]
+               movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:15]
           movies_info = {"data":[], "status": 1, "message": "success"}
           if len(movies) != 0:
                for data in movies:
