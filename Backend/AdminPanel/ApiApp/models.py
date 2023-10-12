@@ -45,6 +45,10 @@ class MovieInfo(models.Model):
     account_id = models.IntegerField(null=True,blank=True)
     upload_by = models.ForeignKey(CyberUser,related_name='missions_assigned',on_delete=models.CASCADE, null=True,blank=True)
     imdb = models.CharField(max_length=200, null=True, blank=True)
+    is_web = models.BooleanField(default=False)
+    season = models.CharField(max_length=200, null=True, blank=True)
+    episode = models.JSONField(null=True, blank=True)
+
 
     def __str__(self):
         return self.name

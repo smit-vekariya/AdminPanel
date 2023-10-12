@@ -257,3 +257,81 @@ def get_access_token(username,password):
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+
+
+@csrf_exempt
+def web_scheduler(request):
+     try:
+          with transaction.atomic():
+               data = json.loads(request.body)
+               username = data["username"]
+               password = data["password"]
+               if username and password:
+                    cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
+                    if cyber_user:
+                         token_and_id = json.loads(get_access_token(username, password))
+                         access_token = token_and_id["access_token"]
+                         account_id = token_and_id["account_id"]
+                         url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
+                         response = requests.request("GET", url).json()
+                         file_ids = MovieInfo.objects.filter(upload_by__username=username).values("file_id")
+                         file_ids =[id["file_id"] for id in file_ids]
+                         not_found_movie=[]
+                         found=[]
+                         bulk_list = list()
+                         web_data=[]
+                         for data in response["data"]["files"]:
+                              if int(data["id"]) not in file_ids:
+                                   if '[' in data["filename"]:
+                                        name = data["filename"].split("(")[0]
+                                        year = data["filename"].split("(")[1].split(")")[0]
+                                        season = data["filename"].split("[")[1].split("-")[0]
+                                        episode =  data["filename"].split("-")[1].split("]")[0]
+                                        upload_source_code = data["shortUrl"]
+                                        if web_data:
+                                             for web_data_ in web_data:
+                                                  for key,value in web_data_.items():
+                                                       if str(value) == str(web_data_[key]):
+                                                            if key == "episode":
+                                                                 web_data_["episode"].append(
+                                                                      {
+                                                                           "ep": episode,
+                                                                           "code": upload_source_code
+                                                                      }
+                                                                 )
+                                        else:
+                                             web_data.append({"name":name,
+                                                       "season":season,
+                                                       "episode":[
+                                                            {
+                                                                 "ep": episode,
+                                                                 "code": upload_source_code
+                                                            },
+                                                       ]})
+
+
+                                        print(">>>>",web_data)
+                         #                url = f"{settings.OMDB_API}?t={name}&y={year}&plot=full&apikey={settings.OMDB_API_KEY}"
+                         #                res = requests.request("GET", url).json()
+                         #                if "Error" in res:
+                         #                     not_found_movie.append({"name":name,"year":year})
+                         #                else:
+                         #                     found.append({"name":name,"year":year})
+                         #                     size=str(round(int(data["fileSize"])/(1024*1024*1024),2))+" GB"
+                         #                     date_object = datetime.strptime(res["Released"], "%d %b %Y")
+                         #                     release_date = date_object.strftime("%Y-%m-%d")
+                         #                     bulk_list.append(MovieInfo(name=res["Title"],release_date=release_date,slug="null",trailer_url="null",download_url="null",
+                         #                                              file_id=data["id"],thumbnail_url=res["Poster"],
+                         #                                              cast=res["Actors"],size=size,upload_source_code=data["shortUrl"],
+                         #                                              upload_by_id=cyber_user["id"],source_type_id=cyber_user["source_type_id"],
+                         #                                              duration=res["Runtime"],genres=res["Genre"],
+                         #                                              description=res["Plot"], imdb=res["imdbRating"]))
+                         # MovieInfo.objects.bulk_create(bulk_list)
+                         return HttpResponse(json.dumps({"data":[{"not found":not_found_movie,"found":found}], "status": 1, "message": "Movie fetch successfully."}))
+                    else:
+                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active."}))
+               else:
+                    return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found."}))
+     except Exception as e:
+          manager.create_from_exception(e)
+          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))

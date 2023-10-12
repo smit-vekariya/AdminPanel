@@ -3,7 +3,7 @@ from .models import MovieInfo, SourceType, CyberUser
 
 @admin.register(MovieInfo)
 class MovieInfoAdmin(admin.ModelAdmin):
-    list_display = ("name", "release_date", "source_type", "upload_source_code", "file_id", "upload_by")
+    list_display = ("name", "release_date", "source_type", "upload_source_code", "file_id", "upload_by", "is_web" ,"season")
 
 @admin.register(SourceType)
 class SourceTypeAdmin(admin.ModelAdmin):

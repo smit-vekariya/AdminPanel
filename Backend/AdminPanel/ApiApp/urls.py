@@ -21,4 +21,5 @@ urlpatterns = [
 
     #collect data
     path('movie_scheduler/',views.movie_scheduler,name="movie_scheduler"),
+    path('web_scheduler/',views.web_scheduler,name="web_scheduler"),
 ]
