@@ -182,11 +182,17 @@ def download_link(request):
                     username = movie_details["upload_by__username"]
                     password = movie_details["upload_by__password"]
                     file_id = movie_details["file_id"]
-                    token_and_id = json.loads(get_access_token(username, password))
+                    token_and_id = CyberUser.objects.filter(username=username).values("cyber_access_token","account_id").first()
                     account_id = token_and_id["account_id"]
-                    access_token = token_and_id["access_token"]
+                    access_token = token_and_id["cyber_access_token"]
                     download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
                     response = requests.request("GET", download_url).json()
+                    if response["_status"] == "error":
+                         token_and_id = json.loads(get_access_token(username, password))
+                         account_id = token_and_id["account_id"]
+                         access_token = token_and_id["access_token"]
+                         download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
+                         response = requests.request("GET", download_url).json()
                     download_url = response["data"]["download_url"]
                     return HttpResponse(json.dumps({"data":{"download_url":download_url}, "status": 1, "message": "success"}))
                else:
@@ -242,18 +248,6 @@ def movie_scheduler(request):
                          return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active."}))
                else:
                     return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found."}))
-     except Exception as e:
-          manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
-
-
-def get_access_token(username,password):
-     try:
-          url = f"{settings.CYBER_FILE}/authorize?username={username}&password={password}"
-          response = requests.request("GET", url).json()
-          account_id = response["data"]["account_id"]
-          access_token = response["data"]["access_token"]
-          return json.dumps({"access_token":access_token,"account_id":account_id})
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
@@ -332,6 +326,19 @@ def web_scheduler(request):
                          return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active."}))
                else:
                     return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found."}))
+     except Exception as e:
+          manager.create_from_exception(e)
+          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+
+
+def get_access_token(username,password):
+     try:
+          url = f"{settings.CYBER_FILE}/authorize?username={username}&password={password}"
+          response = requests.request("GET", url).json()
+          account_id = response["data"]["account_id"]
+          access_token = response["data"]["access_token"]
+          CyberUser.objects.filter(username=username).update(cyber_access_token=access_token)
+          return json.dumps({"access_token":access_token,"account_id":account_id})
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
