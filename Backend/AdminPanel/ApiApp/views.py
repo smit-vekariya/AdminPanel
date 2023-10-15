@@ -54,8 +54,8 @@ def movie_details(request):
 @csrf_exempt
 def home_details(request):
      try:
-          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id","size","imdb").order_by('-release_date')[:3]
-          source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id","size","imdb")
+          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode").order_by('-release_date')[:3]
+          source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode")
           data_ = []
           source_type = SourceType.objects.values("name")
           data_.append({"section_name": "Banner", "data": []})
@@ -81,7 +81,10 @@ def home_details(request):
                               "genres":data["genres"],
                               "cast":data["cast"],
                               "size":data["size"],
-                              "imdb":data["imdb"]
+                              "imdb":data["imdb"],
+                              "is_web":data["is_web"],
+                              "season":data["season"],
+                              "episode":data["episode"]
                          })
           for data in movies:
                data_[0]["data"].append({
@@ -101,7 +104,10 @@ def home_details(request):
                     "genres":data["genres"],
                     "cast":data["cast"],
                     "size":data["size"],
-                    "imdb":data["imdb"]
+                    "imdb":data["imdb"],
+                    "is_web":data["is_web"],
+                    "season":data["season"],
+                    "episode":data["episode"]
                })
           data_ = [ot for ot in data_ if len(ot["data"]) != 0]
           movies_info = {"data": data_,"status": 1, "message":"success"}
@@ -115,9 +121,9 @@ def home_details(request):
 def movie_search(request):
      try:
           search_data = json.loads(request.body)["search_data"]
-          movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:15]
+          movies = MovieInfo.objects.filter(name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb", "is_web", "season", "episode").order_by('-release_date')[:15]
           if len(movies) == 0:
-               movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb").order_by('-release_date')[:15]
+               movies = MovieInfo.objects.filter(source_type__name__icontains=search_data).values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","size","imdb","is_web", "season", "episode").order_by('-release_date')[:15]
           movies_info = {"data":[], "status": 1, "message": "success"}
           if len(movies) != 0:
                for data in movies:
@@ -138,12 +144,15 @@ def movie_search(request):
                          "genres":data["genres"],
                          "cast":data["cast"],
                          "size":data["size"],
-                         "imdb":data["imdb"]
+                         "imdb":data["imdb"],
+                         "is_web":data["is_web"],
+                         "season":data["season"],
+                         "episode":data["episode"]
 
                     })
                return HttpResponse(json.dumps(movies_info))
           elif len(movies) == 0 and search_data =="":
-               movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id").order_by('-release_date')[:10]
+               movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id", "episode", "season", "is_web").order_by('-release_date')[:10]
                for data in movies:
                     movies_info["data"].append({
                          "id":data["id"],
@@ -162,7 +171,10 @@ def movie_search(request):
                          "genres":data["genres"],
                          "cast":data["cast"],
                          "size":data["size"],
-                         "imdb":data["imdb"]
+                         "imdb":data["imdb"],
+                         "is_web":data["is_web"],
+                         "season":data["season"],
+                         "episode":data["episode"]
                     })
                return HttpResponse(json.dumps(movies_info))
           else:
@@ -304,7 +316,15 @@ def web_scheduler(request):
                                                        ]})
 
 
-                                        print(">>>>",web_data)
+                         for web in web_data:
+                               bulk_list.append(MovieInfo(name=web["name"],slug="null",trailer_url="null",download_url="null",
+                                                                      file_id=0,thumbnail_url="",
+                                                                      cast="",size="",upload_source_code=0,
+                                                                      upload_by_id=cyber_user["id"],source_type_id=cyber_user["source_type_id"],
+                                                                      duration="",genres="",
+                                                                      description="", imdb="",is_web=True,season=web["season"],episode=web["episode"]))
+                         MovieInfo.objects.bulk_create(bulk_list)
+
                          #                url = f"{settings.OMDB_API}?t={name}&y={year}&plot=full&apikey={settings.OMDB_API_KEY}"
                          #                res = requests.request("GET", url).json()
                          #                if "Error" in res:
