@@ -200,7 +200,10 @@ def download_link(request):
                     download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
                     response = requests.request("GET", download_url).json()
                     if response["_status"] == "error":
-                         token_and_id = json.loads(get_access_token(username, password))
+                         token_and_id = get_access_token(username, password)
+                         token_and_id = json.loads(token_and_id)
+                         if "msg" in token_and_id:
+                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
                          account_id = token_and_id["account_id"]
                          access_token = token_and_id["access_token"]
                          download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
@@ -225,7 +228,10 @@ def movie_scheduler(request):
                if username and password:
                     cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
                     if cyber_user:
-                         token_and_id = json.loads(get_access_token(username, password))
+                         token_and_id = get_access_token(username, password)
+                         token_and_id = json.loads(token_and_id)
+                         if "msg" in token_and_id:
+                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
                          access_token = token_and_id["access_token"]
                          account_id = token_and_id["account_id"]
                          url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
@@ -275,7 +281,10 @@ def web_scheduler(request):
                if username and password:
                     cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
                     if cyber_user:
-                         token_and_id = json.loads(get_access_token(username, password))
+                         token_and_id = get_access_token(username, password)
+                         token_and_id = json.loads(token_and_id)
+                         if "msg" in token_and_id:
+                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
                          access_token = token_and_id["access_token"]
                          account_id = token_and_id["account_id"]
                          url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
@@ -361,4 +370,6 @@ def get_access_token(username,password):
           return json.dumps({"access_token":access_token,"account_id":account_id})
      except Exception as e:
           manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+          return json.dumps({"msg":"Something went wrong in get access token"})
+
+
