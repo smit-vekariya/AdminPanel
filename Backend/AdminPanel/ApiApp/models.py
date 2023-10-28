@@ -17,7 +17,7 @@ class CyberUser(models.Model):
     account_id = models.IntegerField(null=True,blank=True)
     source_type = models.ForeignKey(SourceType, on_delete=models.CASCADE,null=True,blank=True)
     is_active = models.BooleanField()
-    is_web_account = models.BooleanField(null=True, blank=True, default=False)
+    is_web_account = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
