@@ -10,6 +10,8 @@ from django.conf import settings
 from django.db import transaction
 from datetime import datetime
 # Create your views here.
+import sys
+print(sys.path)
 
 def welcome(request):
      try:
@@ -200,7 +202,8 @@ def download_link(request):
                     download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
                     response = requests.request("GET", download_url).json()
                     if response["_status"] == "error":
-                         token_and_id = json.loads(get_access_token(username, password))
+                         token_and_id = get_access_token(username, password)
+                         token_and_id = json.loads(token_and_id)
                          account_id = token_and_id["account_id"]
                          access_token = token_and_id["access_token"]
                          download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
@@ -225,7 +228,8 @@ def movie_scheduler(request):
                if username and password:
                     cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
                     if cyber_user:
-                         token_and_id = json.loads(get_access_token(username, password))
+                         token_and_id = get_access_token(username, password)
+                         token_and_id =json.loads(token_and_id)
                          access_token = token_and_id["access_token"]
                          account_id = token_and_id["account_id"]
                          url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"

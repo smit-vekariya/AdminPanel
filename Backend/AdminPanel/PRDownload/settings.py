@@ -16,6 +16,7 @@ import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 env = environ.Env(
@@ -33,7 +34,7 @@ SECRET_KEY = 'django-insecure-06z*&_*eikz+bo%&e98@&kvr@r@h@d81!zspx)rtp83svtucp*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["panelprime.pythonanywhere.com","*"]
 
 
 # Application definition
@@ -81,24 +82,24 @@ WSGI_APPLICATION = 'PRDownload.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-# PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(PROJECT_DIR, 'db.sqlite3'),
+# https:///docs.djangoproject.com/en/4.1/ref/settings/#databases
+PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(PROJECT_DIR, 'db.sqlite3'),
 
-#     }
-# }
-
-DATABASES = {"default": {
-    "ENGINE": env("ENGINE"),
-    "NAME": env("NAME"),
-    "USER": env("USER"),
-    "PASSWORD": env("PASSWORD"),
-    "HOST": env("HOST"),
-    "PORT": env("PORT")}
+    }
 }
+
+# DATABASES = {"default": {
+#     "ENGINE": env("ENGINE"),
+#     "NAME": env("NAME"),
+#     "USER": env("USER"),
+#     "PASSWORD": env("PASSWORD"),
+#     "HOST": env("HOST"),
+#     "PORT": env("PORT")}
+# }
 
 
 # Password validation
