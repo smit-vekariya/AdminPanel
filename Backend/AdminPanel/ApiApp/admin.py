@@ -11,4 +11,4 @@ class SourceTypeAdmin(admin.ModelAdmin):
 
 @admin.register(CyberUser)
 class CyberUserAdmin(admin.ModelAdmin):
-    list_display = ("username", "password", "account_id", "is_active", "source_type", "cyber_access_token")
+    list_display = ("username", "password", "account_id", "is_active", "is_web_account", "source_type", "cyber_access_token")

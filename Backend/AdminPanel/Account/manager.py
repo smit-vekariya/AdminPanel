@@ -44,6 +44,8 @@ def create_from_exception(self, url=None, exception=None, traceback=None, **kwar
 
     ErrorBase.objects.create(class_name=exc_type.__name__, message=to_unicode(exc_value), traceback=tb_message, level=level)
 
+def create_from_text(message, class_name=None, level=40, traceback=None):
+    ErrorBase.objects.create(class_name=class_name, message=message, traceback=traceback, level=level)
 
 def create_from_text(message, class_name=None, level=40, traceback=None):
     ErrorBase.objects.create(class_name=class_name, message=message, traceback=traceback, level=level)

@@ -204,6 +204,11 @@ def download_link(request):
                     if response["_status"] == "error":
                          token_and_id = get_access_token(username, password)
                          token_and_id = json.loads(token_and_id)
+<<<<<<< HEAD
+=======
+                         if "msg" in token_and_id:
+                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
+>>>>>>> e561a8e45f19adaeb5bad92760470805ec93b1fb
                          account_id = token_and_id["account_id"]
                          access_token = token_and_id["access_token"]
                          download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
@@ -226,10 +231,16 @@ def movie_scheduler(request):
                username = data["username"]
                password = data["password"]
                if username and password:
-                    cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
+                    cyber_user = CyberUser.objects.filter(username=username,is_active=True,is_web_account=False).values("id","source_type_id").first()
                     if cyber_user:
                          token_and_id = get_access_token(username, password)
+<<<<<<< HEAD
                          token_and_id =json.loads(token_and_id)
+=======
+                         token_and_id = json.loads(token_and_id)
+                         if "msg" in token_and_id:
+                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
+>>>>>>> e561a8e45f19adaeb5bad92760470805ec93b1fb
                          access_token = token_and_id["access_token"]
                          account_id = token_and_id["account_id"]
                          url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
@@ -261,7 +272,7 @@ def movie_scheduler(request):
                          MovieInfo.objects.bulk_create(bulk_list)
                          return HttpResponse(json.dumps({"data":[{"not found":not_found_movie,"found":found}], "status": 1, "message": "Movie fetch successfully."}))
                     else:
-                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active."}))
+                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active or is not movie account"}))
                else:
                     return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found."}))
      except Exception as e:
@@ -277,9 +288,12 @@ def web_scheduler(request):
                username = data["username"]
                password = data["password"]
                if username and password:
-                    cyber_user = CyberUser.objects.filter(username=username,is_active=True).values("id","source_type_id").first()
+                    cyber_user = CyberUser.objects.filter(username=username,is_active=True,is_web_account=True).values("id","source_type_id").first()
                     if cyber_user:
-                         token_and_id = json.loads(get_access_token(username, password))
+                         token_and_id = get_access_token(username, password)
+                         token_and_id = json.loads(token_and_id)
+                         if "msg" in token_and_id:
+                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
                          access_token = token_and_id["access_token"]
                          account_id = token_and_id["account_id"]
                          url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
@@ -319,14 +333,16 @@ def web_scheduler(request):
                                                             },
                                                        ]})
 
-
                          for web in web_data:
-                               bulk_list.append(MovieInfo(name=web["name"],slug="null",trailer_url="null",download_url="null",
-                                                                      file_id=0,thumbnail_url="",
-                                                                      cast="",size="",upload_source_code=0,
-                                                                      upload_by_id=cyber_user["id"],source_type_id=cyber_user["source_type_id"],
-                                                                      duration="",genres="",
-                                                                      description="", imdb="",is_web=True,season=web["season"],episode=web["episode"]))
+                              is_exits  = MovieInfo.objects.filter(name=web["name"]).first()
+                              if is_exits is None:
+                                   bulk_list.append(MovieInfo(name=web["name"],slug="null",trailer_url="null",download_url="null",
+                                                                           file_id=0,thumbnail_url="",
+                                                                           cast="",size="",upload_source_code=0,
+                                                                           upload_by_id=cyber_user["id"],source_type_id=cyber_user["source_type_id"],
+                                                                           duration="",genres="",
+                                                                           description="", imdb="",is_web=True,season=web["season"],episode=web["episode"]))
+                                   found.append(web["name"])
                          MovieInfo.objects.bulk_create(bulk_list)
 
                          #                url = f"{settings.OMDB_API}?t={name}&y={year}&plot=full&apikey={settings.OMDB_API_KEY}"
@@ -347,7 +363,7 @@ def web_scheduler(request):
                          # MovieInfo.objects.bulk_create(bulk_list)
                          return HttpResponse(json.dumps({"data":[{"not found":not_found_movie,"found":found}], "status": 1, "message": "Movie fetch successfully."}))
                     else:
-                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active."}))
+                         return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found or de-active or is not web account"}))
                else:
                     return HttpResponse(json.dumps({"data":[], "status": 1, "message": "Username not found."}))
      except Exception as e:
@@ -365,4 +381,6 @@ def get_access_token(username,password):
           return json.dumps({"access_token":access_token,"account_id":account_id})
      except Exception as e:
           manager.create_from_exception(e)
-          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+          return json.dumps({"msg":"Something went wrong in get access token"})
+
+
