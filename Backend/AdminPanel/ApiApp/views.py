@@ -204,11 +204,8 @@ def download_link(request):
                     if response["_status"] == "error":
                          token_and_id = get_access_token(username, password)
                          token_and_id = json.loads(token_and_id)
-<<<<<<< HEAD
-=======
                          if "msg" in token_and_id:
                               return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
->>>>>>> e561a8e45f19adaeb5bad92760470805ec93b1fb
                          account_id = token_and_id["account_id"]
                          access_token = token_and_id["access_token"]
                          download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
@@ -234,13 +231,9 @@ def movie_scheduler(request):
                     cyber_user = CyberUser.objects.filter(username=username,is_active=True,is_web_account=False).values("id","source_type_id").first()
                     if cyber_user:
                          token_and_id = get_access_token(username, password)
-<<<<<<< HEAD
-                         token_and_id =json.loads(token_and_id)
-=======
                          token_and_id = json.loads(token_and_id)
                          if "msg" in token_and_id:
                               return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
->>>>>>> e561a8e45f19adaeb5bad92760470805ec93b1fb
                          access_token = token_and_id["access_token"]
                          account_id = token_and_id["account_id"]
                          url = f"{settings.CYBER_FILE}/folder/listing?access_token={access_token}&account_id={account_id}"
