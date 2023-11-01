@@ -9,9 +9,12 @@ import requests
 from django.conf import settings
 from django.db import transaction
 from datetime import datetime
+from django.http import JsonResponse
+from django.db.models.functions import Cast
+from django.db.models import CharField
 # Create your views here.
 import sys
-print(sys.path)
+
 
 def welcome(request):
      try:
@@ -154,7 +157,7 @@ def movie_search(request):
                     })
                return HttpResponse(json.dumps(movies_info))
           elif len(movies) == 0 and search_data =="":
-               movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id", "episode", "season", "is_web").order_by('-release_date')[:10]
+               movies = MovieInfo.objects.values("id","name","slug","size","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","duration","description","language","genres","cast","published","file_id", "episode", "season", "is_web", "imdb").order_by('-release_date')[:10]
                for data in movies:
                     movies_info["data"].append({
                          "id":data["id"],
@@ -377,3 +380,27 @@ def get_access_token(username,password):
           return json.dumps({"msg":"Something went wrong in get access token"})
 
 
+@csrf_exempt
+def data_transfer(request):
+     try:
+          fields_to_retrieve = [field.name for field in MovieInfo._meta.fields if field.name not in ['release_date','published'] ]
+          movies = MovieInfo.objects.all().annotate(release_date_str=Cast('release_date', CharField()),published_str=Cast('published', CharField())).values(*fields_to_retrieve,"release_date_str","published_str")
+          movies_info = {"data":list(movies)}
+          url = f"{settings.LIVE_URL}/premiear/data_retrieve/"
+          headers = {'Content-Type': 'application/json'}
+          response = requests.post(url, data=json.dumps(movies_info), headers=headers).json()
+          return JsonResponse(response)
+     except Exception as e:
+          print(e)
+          manager.create_from_exception(e)
+          return JsonResponse({"msg":"Something went wrong in data transfer"})
+
+
+@csrf_exempt
+def data_retrieve(request):
+     try:
+          data = json.loads(request.body)
+          return JsonResponse({"msg":"Data Retrieve successfully"})
+     except Exception as e:
+          manager.create_from_exception(e)
+          return JsonResponse({"msg":"Something went wrong in data transfer"})
