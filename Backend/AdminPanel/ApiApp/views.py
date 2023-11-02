@@ -384,14 +384,13 @@ def get_access_token(username,password):
 def data_transfer(request):
      try:
           fields_to_retrieve = [field.name for field in MovieInfo._meta.fields if field.name not in ['release_date','published'] ]
-          movies = MovieInfo.objects.all().annotate(release_date_str=Cast('release_date', CharField()),published_str=Cast('published', CharField())).values(*fields_to_retrieve,"release_date_str","published_str")
+          movies = MovieInfo.objects.all().annotate(release_date_str=Cast('release_date', CharField()),published_str=Cast('published', CharField())).values(*fields_to_retrieve,"release_date_str","published_str","source_type__name","upload_by__username")
           movies_info = {"data":list(movies)}
           url = f"{settings.LIVE_URL}/premiear/data_retrieve/"
           headers = {'Content-Type': 'application/json'}
           response = requests.post(url, data=json.dumps(movies_info), headers=headers).json()
           return JsonResponse(response)
      except Exception as e:
-          print(e)
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Something went wrong in data transfer"})
 
@@ -401,6 +400,8 @@ def data_retrieve(request):
      try:
           data = json.loads(request.body)
           all_movie =[i["name"] for i in list(MovieInfo.objects.values("name"))]
+          source_type = {i["name"]:i["id"] for i in SourceType.objects.values("id","name")}
+          cyber_user = {i["username"]:i["id"] for i in CyberUser.objects.values("id","username")}
           add_new_movie = []
           already_exits = []
           for i in data["data"]:
@@ -413,7 +414,7 @@ def data_retrieve(request):
                          'thumbnail_url':i.get("thumbnail_url"),
                          'source_url':i.get("source_url"),
                          'screenshots':i.get("screenshots"),
-                         'source_type_id':int(i.get("source_type")),
+                         'source_type_id':source_type[i.get("source_type__name")],
                          'duration':i.get("duration"),
                          'size':i.get("size"),
                          'description':i.get("description"),
@@ -424,7 +425,7 @@ def data_retrieve(request):
                          'file_id':i.get("file_id"),
                          'username':i.get("username"),
                          'account_id':i.get("account_id"),
-                         'upload_by_id':int(i.get("upload_by")),
+                         'upload_by_id':cyber_user[i.get("upload_by__username")],
                          'imdb':i.get("imdb"),
                          'is_web':i.get("is_web"),
                          'season':i.get("season"),
