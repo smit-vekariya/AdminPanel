@@ -47,9 +47,6 @@ def create_from_exception(self, url=None, exception=None, traceback=None, **kwar
 def create_from_text(message, class_name=None, level=40, traceback=None):
     ErrorBase.objects.create(class_name=class_name, message=message, traceback=traceback, level=level)
 
-def create_from_text(message, class_name=None, level=40, traceback=None):
-    ErrorBase.objects.create(class_name=class_name, message=message, traceback=traceback, level=level)
-
 
 def check_secret_key(function):
     @wraps(function)

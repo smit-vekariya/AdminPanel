@@ -400,7 +400,45 @@ def data_transfer(request):
 def data_retrieve(request):
      try:
           data = json.loads(request.body)
-          return JsonResponse({"msg":"Data Retrieve successfully"})
+          all_movie =[i["name"] for i in list(MovieInfo.objects.values("name"))]
+          add_new_movie = []
+          already_exits = []
+          for i in data["data"]:
+               if i.get("name") not in all_movie:
+                    data_ = {
+                         'name':i.get("name"),
+                         'slug':i.get("slug"),
+                         'trailer_url':i.get("trailer_url"),
+                         'download_url':i.get("download_url"),
+                         'thumbnail_url':i.get("thumbnail_url"),
+                         'source_url':i.get("source_url"),
+                         'screenshots':i.get("screenshots"),
+                         'source_type_id':int(i.get("source_type")),
+                         'duration':i.get("duration"),
+                         'size':i.get("size"),
+                         'description':i.get("description"),
+                         'language':i.get("language"),
+                         'genres':i.get("genres"),
+                         'cast':i.get("cast"),
+                         'upload_source_code':i.get("upload_source_code"),
+                         'file_id':i.get("file_id"),
+                         'username':i.get("username"),
+                         'account_id':i.get("account_id"),
+                         'upload_by_id':int(i.get("upload_by")),
+                         'imdb':i.get("imdb"),
+                         'is_web':i.get("is_web"),
+                         'season':i.get("season"),
+                         'episode':i.get("episode"),
+                         'release_date':i.get("release_date_str"),
+                         'published':i.get("published_str"),
+                         }
+                    new_instance = MovieInfo(**data_)
+                    new_instance.save()
+                    add_new_movie.append(i.get("name"))
+                    all_movie.append(i.get("name"))
+               else:
+                    already_exits.append(i.get("name"))
+          return JsonResponse({"msg":"Data Retrieve successfully","total_add_movie":len(add_new_movie),"already_exits":already_exits,"add_new_movie":add_new_movie})
      except Exception as e:
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Something went wrong in data transfer"})
