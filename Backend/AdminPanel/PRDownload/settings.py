@@ -151,7 +151,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SECRET_KEY = env("SECRET_KEY")
 
 CYBER_FILE = env("CYBER_FILE")
-
+LIVE_URL = env("LIVE_URL")
 OMDB_API = env("OMDB_API")
 OMDB_API_KEY = env("OMDB_API_KEY")
 

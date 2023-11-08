@@ -24,4 +24,5 @@ urlpatterns = [
     path('web_scheduler/',views.web_scheduler,name="web_scheduler"),
     path('data_transfer/',views.data_transfer,name="data_transfer"),
     path('data_retrieve/',views.data_retrieve,name="data_retrieve"),
+    path('download_csv/',views.download_csv,name="download_csv"),
 ]

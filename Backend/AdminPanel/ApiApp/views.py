@@ -12,6 +12,7 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.db.models.functions import Cast
 from django.db.models import CharField
+import pandas as pd
 # Create your views here.
 import sys
 
@@ -398,11 +399,12 @@ def data_transfer(request):
      try:
           fields_to_retrieve = [field.name for field in MovieInfo._meta.fields if field.name not in ['release_date','published'] ]
           movies = MovieInfo.objects.all().annotate(release_date_str=Cast('release_date', CharField()),published_str=Cast('published', CharField())).values(*fields_to_retrieve,"release_date_str","published_str","source_type__name","upload_by__username")
+          manager.create_from_text(list(movies))
           movies_info = {"data":list(movies)}
           url = f"{settings.LIVE_URL}/premiear/data_retrieve/"
           headers = {'Content-Type': 'application/json'}
-          response = requests.post(url, data=json.dumps(movies_info), headers=headers).json()
-          return JsonResponse(response)
+          response = requests.post(url, data=movies_info, headers=headers)
+          return JsonResponse({"msg":"csv create succesfully"})
      except Exception as e:
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Something went wrong in data transfer"})
@@ -456,3 +458,17 @@ def data_retrieve(request):
      except Exception as e:
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Something went wrong in data transfer"})
+
+
+@csrf_exempt
+def download_csv(request):
+    try:
+        queryset = list(MovieInfo.objects.all().values())
+        data = pd.DataFrame(queryset)
+        response = HttpResponse(content_type='text/csv')
+        response["Content-Disposition"] = 'attachment; filename="MovieInfo.csv"'
+        data.to_csv(response,index=False)
+        return response
+    except Exception as e:
+          manager.create_from_exception(e)
+          return JsonResponse({"msg":"Somthing wrong on download csv"})
