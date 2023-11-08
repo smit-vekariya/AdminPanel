@@ -25,4 +25,6 @@ urlpatterns = [
     path('data_transfer/',views.data_transfer,name="data_transfer"),
     path('data_retrieve/',views.data_retrieve,name="data_retrieve"),
     path('download_csv/',views.download_csv,name="download_csv"),
+    path('csv_to_modal/',views.csv_to_modal,name="csv_to_modal"),
+    path('app_info/',views.app_info,name="app_info"),
 ]

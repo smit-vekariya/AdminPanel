@@ -2,7 +2,7 @@ import json
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-from ApiApp.models import MovieInfo, CyberUser, SourceType
+from ApiApp.models import MovieInfo, CyberUser, SourceType, AppInfo, Report
 from Account import manager
 import time
 import requests
@@ -472,3 +472,53 @@ def download_csv(request):
     except Exception as e:
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Somthing wrong on download csv"})
+
+
+@csrf_exempt
+def csv_to_modal(request):
+     try:
+          with transaction.atomic():
+               na_values_list = ['NaN', 'N/A', 'null', 'nan']
+               df = pd.read_csv("C:/Users/Admin/Downloads/MovieInfo.csv",na_values=na_values_list, keep_default_na=False)
+               result = df.to_dict(orient='records')
+               bulk_list =[]
+               for res in result:
+                    bulk_list.append(MovieInfo(name=res["name"],release_date=res["release_date"],slug=res["slug"],trailer_url=res["trailer_url"],download_url=res["download_url"],
+                                                                      file_id=res["file_id"],thumbnail_url=res["thumbnail_url"],
+                                                                      cast=res["cast"],size=res["size"],upload_source_code=res["upload_source_code"],
+                                                                      upload_by_id=res["upload_by_id"],source_type_id=res["source_type_id"],
+                                                                      duration=res["duration"],genres=res["genres"],
+                                                                      description=res["description"], imdb=res["imdb"],source_url=res["source_url"],screenshots=res["screenshots"],language=res["language"],
+                                                                      published=res["published"],is_web=res["is_web"],season=res["season"],
+                                                                      episode=res["episode"],username=res["username"],account_id=0))
+               MovieInfo.objects.bulk_create(bulk_list)
+               return JsonResponse({"msg":"Data insert successfully."})
+     except Exception as e:
+          manager.create_from_exception(e)
+          return JsonResponse({"msg":"Somthing wrong on download csv"})
+
+
+@csrf_exempt
+def app_info(request):
+     try:
+          data = json.loads(request.body)
+          device_id = data["device_id"]
+          device_name = data["type"]
+          device_name = AppInfo.objects.get(device = device_name)
+          report, created = Report.objects.get_or_create(device_id=device_id, device_name=device_name, defaults={'first_login_date': datetime.now(),'last_login_date': datetime.now()})
+          if not created:
+               report.last_login_date= datetime.now()
+               report.save()
+          queryset = AppInfo.objects.all().values()
+          main ={}
+          for i in queryset:
+               dic1 = {}
+               dic1["version"]=i["version"]
+               dic1["url"]=i["url"]
+               dic1["force_update"]=i["force_update"]
+               main[i["device"]]=dic1
+          return HttpResponse(json.dumps({"data":main, "status": 1, "message": "App information"}))
+     except Exception as e:
+          manager.create_from_exception(e)
+          return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+
