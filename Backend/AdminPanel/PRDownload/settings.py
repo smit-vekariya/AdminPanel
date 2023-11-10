@@ -32,7 +32,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = 'django-insecure-06z*&_*eikz+bo%&e98@&kvr@r@h@d81!zspx)rtp83svtucp*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["panelprime.pythonanywhere.com","*"]
 
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -136,7 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = env("STATIC_URL")
+
 # STATICFILES_DIRS = (
 #     os.path.join(BASE_DIR,  'static'),
 # )
@@ -155,5 +156,8 @@ LIVE_URL = env("LIVE_URL")
 OMDB_API = env("OMDB_API")
 OMDB_API_KEY = env("OMDB_API_KEY")
 
-
-STATIC_ROOT = env("STATIC_ROOT")
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static/'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_DIRS = [BASE_DIR / 'static',]
+# STATICFILES_STORAGE = 'django.contrib.static.storage.StaticFilesStorage'
