@@ -26,14 +26,14 @@ class CyberUser(models.Model):
 
 class MovieInfo(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(max_length=250)
+    slug = models.SlugField(max_length=250,null=True,blank=True)
     release_date = models.DateField(default=timezone.now,null=True, blank=True)
-    trailer_url = models.CharField(max_length=900)
+    trailer_url = models.CharField(max_length=900, null=True, blank=True)
     download_url = models.CharField(max_length=900)
     thumbnail_url = models.CharField(max_length=900, null=True, blank=True)
     source_url = models.CharField(max_length=900, null=True, blank=True)
     screenshots = models.JSONField(null=True, blank=True)
-    source_type = models.ForeignKey(SourceType, on_delete=models.CASCADE)
+    source_type = models.ForeignKey(SourceType, null=True, blank=True, on_delete=models.CASCADE)
     duration = models.CharField(max_length=200, null=True, blank=True)
     size = models.CharField(max_length=200, null=True, blank=True)
     description = models.CharField(max_length=10000, null=True, blank=True)
@@ -41,7 +41,7 @@ class MovieInfo(models.Model):
     genres = models.CharField(max_length=200, null=True, blank=True)
     cast = models.CharField(max_length=200, null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    upload_source_code = models.CharField(max_length=200)
+    upload_source_code = models.CharField(max_length=200, null=True, blank=True)
     file_id = models.IntegerField(null=True,blank=True)
     username = models.CharField(max_length=200, null=True, blank=True)
     account_id = models.IntegerField(null=True,blank=True)
@@ -68,8 +68,8 @@ class AppInfo(models.Model):
 class Report(models.Model):
     device_id = models.CharField(max_length=200, null=True, blank=True)
     device_name = models.ForeignKey(AppInfo,on_delete=models.CASCADE, null=True, blank=True)
-    first_login_date = models.DateTimeField(default=datetime.now(), null=True, blank=True)
-    last_login_date = models.DateTimeField(default=datetime.now(), null=True, blank=True)
+    first_login_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    last_login_date = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
 
 

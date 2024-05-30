@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ApiApp',
-    'Account'
+    'Account',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -92,6 +93,7 @@ DATABASES = {
 
     }
 }
+CSRF_TRUSTED_ORIGINS= ["https://8000-idx-adminpanel-1717055595988.cluster-3g4scxt2njdd6uovkqyfcabgo6.cloudworkstations.dev"]
 
 # DATABASES = {"default": {
 #     "ENGINE": env("ENGINE"),
