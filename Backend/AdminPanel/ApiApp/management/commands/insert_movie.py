@@ -4,17 +4,27 @@ from ApiApp.models import MovieInfo
 from django.conf import settings
 from datetime import datetime 
 from django.db import transaction
+from rest_framework.views import APIView
+from django.http import HttpResponse
+import requests
+import json
+from Account import manager
+from datetime import datetime
+import urllib.request
+import re
+import yt_dlp
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             with transaction.atomic():
-                # MovieInfo.objects.all().delete()
+                MovieInfo.objects.all().delete()
                 not_found_movie=[]
                 found=[]
                 request_data= requests.request("GET","https://hsdhsgg.pages.dev/test.json")
                 movie_data = request_data.json()
                 bulk_list=[]
+                i=0
                 for data in movie_data["AllMovieDataList"]:
                     name = data["movieName"].split("(")[0]
                     year = data["movieName"].split("(")[1].split(")")[0]
@@ -29,17 +39,29 @@ class Command(BaseCommand):
                             release_date = date_object.strftime("%Y-%m-%d")
                         else:
                             release_date=None
+                        trailer_url = get_trailer_url(data["movieName"]) 
                         bulk_list.append(MovieInfo(name=data["movieName"],release_date=release_date,download_url=data["server3"],
-                                                    thumbnail_url=data["ImageUrlVertical"],
+                                                    thumbnail_url=data["ImageUrlVertical"],trailer_url=trailer_url,
                                                     cast=res["Actors"],
                                                     language=res["Language"],duration=res["Runtime"],genres=res["Genre"],
                                                     description=res["Plot"], imdb=res["imdbRating"]))
+                    if i == 10:
+                        break
+                    i+=1
                 MovieInfo.objects.bulk_create(bulk_list)
         except Exception as e:
             print(e)
         print(not_found_movie)
-        print(found)
                 
+
+def get_trailer_url(name):
+    url_data = name + " trailer"
+    url_data = url_data.replace(" ","%20").replace("\"","%22")
+    search_song_url = urllib.request.urlopen(f"https://www.youtube.com/results?search_query={url_data}")
+    video_ids = re.findall(r"watch\?v=(\S{11})", search_song_url.read().decode())
+    url_data = str("https://www.youtube.com/watch?v=" + video_ids[0])
+    return url_data
+   
 
 
 #   {
