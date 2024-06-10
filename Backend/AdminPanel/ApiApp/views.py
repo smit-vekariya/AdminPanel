@@ -202,7 +202,7 @@ class MovieSearch(ModelViewSet):
                return HttpResponse(json.dumps({"data":data, "status": 1, "message": "success"}))
           except Exception as e:
                print("e", e)
-          manager.create_from_exception(e)
+               manager.create_from_exception(e)
                return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
 
 
