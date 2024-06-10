@@ -26,6 +26,7 @@ class CyberUser(models.Model):
 
 class MovieInfo(models.Model):
     name = models.CharField(max_length=100)
+    static_id = models.IntegerField(null=True, blank=True)
     slug = models.SlugField(max_length=250,null=True,blank=True)
     release_date = models.DateField(default=timezone.now,null=True, blank=True)
     trailer_url = models.CharField(max_length=900, null=True, blank=True)
@@ -40,6 +41,7 @@ class MovieInfo(models.Model):
     language = models.CharField(max_length=200, null=True, blank=True, default="Hindi")
     genres = models.CharField(max_length=200, null=True, blank=True)
     cast = models.CharField(max_length=200, null=True, blank=True)
+    industry = models.CharField(max_length=200, null=True, blank=True)
     published = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     upload_source_code = models.CharField(max_length=200, null=True, blank=True)
     file_id = models.IntegerField(null=True,blank=True)
@@ -50,6 +52,7 @@ class MovieInfo(models.Model):
     is_web = models.BooleanField(default=False)
     season = models.CharField(max_length=200, null=True, blank=True)
     episode = models.JSONField(null=True, blank=True)
+    all_episode = models.JSONField(null=True, blank=True)
 
 
     def __str__(self):

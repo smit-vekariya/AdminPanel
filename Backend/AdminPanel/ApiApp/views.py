@@ -60,20 +60,21 @@ def movie_details(request):
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
 
-
 @csrf_exempt
 def home_details(request):
      try:
-          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","file_id","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode").order_by('-release_date')[:3]
-          source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","file_id","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode")
+          movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","file_id","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode","industry").order_by('-release_date')[:3]
+          source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","file_id","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode","industry")
           data_ = []
+          industry_list =list(set([data["industry"] for data in source_data]))
+          print("industry_list", industry_list)
           source_type = SourceType.objects.values("name")
           data_.append({"section_name": "Banner", "data": []})
-          for ott in source_type:
-               data_.append({"section_name": ott["name"],"data": []})
+          for ott in industry_list:
+               data_.append({"section_name": ott,"data": []})
           for data in source_data:
                for ot in data_:
-                    if ot["section_name"] == data["source_type__name"]:
+                    if ot["section_name"] == data["industry"]:
                          ot["data"].append({
                               "id":data["id"],
                               "name":data["name"],
@@ -125,8 +126,77 @@ def home_details(request):
           movies_info = {"data": data_,"status": 1, "message":"success"}
           return HttpResponse(json.dumps(movies_info))
      except Exception as e:
+          print("e", e)
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+
+
+# @csrf_exempt
+# def home_details(request):
+#      try:
+#           movies = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","file_id","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode","industry").order_by('-release_date')[:3]
+#           source_data = MovieInfo.objects.values("id","name","slug","release_date","trailer_url","download_url","thumbnail_url","source_url","source_url","screenshots","source_type__name","file_id","duration","description","language","genres","cast","published","file_id","size","imdb", "is_web", "season", "episode","industry")
+#           data_ = []
+#           source_type = SourceType.objects.values("name")
+#           data_.append({"section_name": "Banner", "data": []})
+#           for ott in source_type:
+#                data_.append({"section_name": ott["name"],"data": []})
+#           for data in source_data:
+#                for ot in data_:
+#                     if ot["section_name"] == data["source_type__name"]:
+#                          ot["data"].append({
+#                               "id":data["id"],
+#                               "name":data["name"],
+#                               "slug":data["slug"],
+#                               "release_date":str(data["release_date"]),
+#                               "trailer_url":data["trailer_url"],
+#                               "download_url":data["download_url"],
+#                               "thumbnail_url":data["thumbnail_url"],
+#                               "source_url":data["source_url"],
+#                               "screenshots":data["screenshots"],
+#                               "source_type":data["source_type__name"],
+#                               "duration":data["duration"],
+#                               "description":data["description"],
+#                               "language":str(data["language"]),
+#                               "genres":data["genres"],
+#                               "cast":data["cast"],
+#                               "file_id":data["file_id"],
+#                               "size":data["size"],
+#                               "imdb":data["imdb"],
+#                               "is_web":data["is_web"],
+#                               "season":data["season"],
+#                               "episode":data["episode"]
+#                          })
+#           for data in movies:
+#                data_[0]["data"].append({
+#                     "id":data["id"],
+#                     "name":data["name"],
+#                     "slug":data["slug"],
+#                     "release_date":str(data["release_date"]),
+#                     "trailer_url":data["trailer_url"],
+#                     "download_url":data["download_url"],
+#                     "thumbnail_url":data["thumbnail_url"],
+#                     "source_url":data["source_url"],
+#                     "screenshots":data["screenshots"],
+#                     "source_type":data["source_type__name"],
+#                     "duration":data["duration"],
+#                     "description":data["description"],
+#                     "language":str(data["language"]),
+#                     "genres":data["genres"],
+#                     "cast":data["cast"],
+#                     "file_id":data["file_id"],
+#                     "size":data["size"],
+#                     "imdb":data["imdb"],
+#                     "is_web":data["is_web"],
+#                     "season":data["season"],
+#                     "episode":data["episode"]
+#                })
+#           data_ = [ot for ot in data_ if len(ot["data"]) != 0]
+#           movies_info = {"data": data_,"status": 1, "message":"success"}
+#           return HttpResponse(json.dumps(movies_info))
+#      except Exception as e:
+#           manager.create_from_exception(e)
+#           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
 
 
 @csrf_exempt
@@ -204,34 +274,53 @@ def download_link(request):
           movie_data = json.loads(request.body)
           movie_id =movie_data["movie_id"]
           file_id =movie_data["file_id"]
-          if movie_id:
-               movie_details = MovieInfo.objects.filter(id=movie_id).values("upload_by__username","upload_by__password","file_id").first()
-               if movie_details:
-                    username = movie_details["upload_by__username"]
-                    password = movie_details["upload_by__password"]
-                    # file_id = movie_details["file_id"]
-                    token_and_id = CyberUser.objects.filter(username=username).values("cyber_access_token","account_id").first()
-                    account_id = token_and_id["account_id"]
-                    access_token = token_and_id["cyber_access_token"]
-                    download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
-                    response = requests.request("GET", download_url).json()
-                    if response["_status"] == "error":
-                         token_and_id = get_access_token(username, password)
-                         token_and_id = json.loads(token_and_id)
-                         if "msg" in token_and_id:
-                              return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
-                         account_id = token_and_id["account_id"]
-                         access_token = token_and_id["access_token"]
-                         download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
-                         response = requests.request("GET", download_url).json()
-                    download_url = response["data"]["download_url"]
-                    return HttpResponse(json.dumps({"data":{"download_url":download_url}, "status": 1, "message": "success"}))
-               else:
-                    return HttpResponse(json.dumps({"data":{}, "status": 1, "message": "Movie not found"}))
-          return HttpResponse(json.dumps({"data":{}, "status": 1, "message": "Movie id not found"}))
+          if movie_id and file_id != 0:
+               movie_details = MovieInfo.objects.filter(id=movie_id).values("all_episode").first()
+               download_url = movie_details["all_episode"][str(file_id)]
+          else:
+               movie_details = MovieInfo.objects.filter(id=movie_id).values("download_url").first()
+               download_url = movie_details["download_url"]
+          return HttpResponse(json.dumps({"data":{"download_url":download_url}, "status": 1, "message": "success"}))
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
+
+
+# @csrf_exempt
+# def download_link(request):
+#      print("download_link")
+#      try:
+#           movie_data = json.loads(request.body)
+#           movie_id =movie_data["movie_id"]
+#           file_id =movie_data["file_id"]
+#           if movie_id:
+#                movie_details = MovieInfo.objects.filter(id=movie_id).values("upload_by__username","upload_by__password","file_id").first()
+#                if movie_details:
+#                     username = movie_details["upload_by__username"]
+#                     password = movie_details["upload_by__password"]
+#                     # file_id = movie_details["file_id"]
+#                     token_and_id = CyberUser.objects.filter(username=username).values("cyber_access_token","account_id").first()
+#                     account_id = token_and_id["account_id"]
+#                     access_token = token_and_id["cyber_access_token"]
+#                     download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
+#                     response = requests.request("GET", download_url).json()
+#                     if response["_status"] == "error":
+#                          token_and_id = get_access_token(username, password)
+#                          token_and_id = json.loads(token_and_id)
+#                          if "msg" in token_and_id:
+#                               return HttpResponse(json.dumps({"data":[], "status": 1, "message": token_and_id["msg"]}))
+#                          account_id = token_and_id["account_id"]
+#                          access_token = token_and_id["access_token"]
+#                          download_url = f"{settings.CYBER_FILE}/file//download?access_token={access_token}&account_id={account_id}&file_id={file_id}"
+#                          response = requests.request("GET", download_url).json()
+#                     download_url = response["data"]["download_url"]
+#                     return HttpResponse(json.dumps({"data":{"download_url":download_url}, "status": 1, "message": "success"}))
+#                else:
+#                     return HttpResponse(json.dumps({"data":{}, "status": 1, "message": "Movie not found"}))
+#           return HttpResponse(json.dumps({"data":{}, "status": 1, "message": "Movie id not found"}))
+#      except Exception as e:
+#           manager.create_from_exception(e)
+#           return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
 
 
 @csrf_exempt
