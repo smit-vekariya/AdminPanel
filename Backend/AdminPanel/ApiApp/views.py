@@ -13,8 +13,19 @@ from django.http import JsonResponse
 from django.db.models.functions import Cast
 from django.db.models import CharField
 import pandas as pd
+from rest_framework.viewsets import ModelViewSet,GenericViewSet
+from ApiApp.serializers import MovieInfoSerializer, AppInfoSerializer
+from rest_framework.mixins import ListModelMixin
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
 # Create your views here.
+from rest_framework.renderers import JSONRenderer
+from rest_framework import generics
+from django.views.generic import TemplateView
 import sys
+
+
+class Welcome(TemplateView):
+     template_name = "ApiApp/welcome.html"
 
 
 def welcome(request):
@@ -24,6 +35,35 @@ def welcome(request):
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({str(e)}))
 
+
+class MovieDetails(ListAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def list(self, request):
+          try:
+               queryset= self.get_queryset()
+               movie_id = request.data["movie_id"]
+               movie_data = queryset.filter(id=movie_id)
+               data = self.get_serializer(movie_data, many=True).data
+               return HttpResponse(json.dumps({"data":data[0], "status": 1, "message": "success"}))
+          except Exception as e:
+               manager.create_from_exception(e)
+               return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
+
+
+class MovieDetails2(RetrieveAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def retrieve(self, request, *args, **kwargs):
+          try:
+               instance = self.get_object()
+               serializer = self.get_serializer(instance).data
+               return HttpResponse(json.dumps({"data":serializer, "status": 1, "message": "success"}))
+          except Exception as e:
+               manager.create_from_exception(e)
+               return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
 
 @csrf_exempt
 def movie_details(request):
@@ -59,6 +99,24 @@ def movie_details(request):
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":{}, "status": 0, "message": str(e)}))
+
+
+class HomeDetails(ModelViewSet):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def list(self, request):
+          try:
+               queryset= self.get_queryset()
+               movies = queryset.order_by('-release_date')[:3]
+               movie_data = self.get_serializer(movies, many=True).data
+               data = []
+               data.append({"section_name": "Banner", "data": movie_data})
+               return HttpResponse(json.dumps({"data":data, "status": 1, "message": "success"}))
+          except Exception as e:
+               manager.create_from_exception(e)
+               return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+
 
 @csrf_exempt
 def home_details(request):
@@ -126,9 +184,26 @@ def home_details(request):
           movies_info = {"data": data_,"status": 1, "message":"success"}
           return HttpResponse(json.dumps(movies_info))
      except Exception as e:
-          print("e", e)
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
+
+
+
+class MovieSearch(ModelViewSet):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def list(self, request):
+          try:
+               queryset= self.get_queryset()
+               search_data = request.data["search_data"]
+               queryset = queryset.filter(name__icontains=search_data)
+               data = self.get_serializer(queryset, many=True).data
+               return HttpResponse(json.dumps({"data":data, "status": 1, "message": "success"}))
+          except Exception as e:
+               print("e", e)
+          manager.create_from_exception(e)
+               return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
 
 
 # @csrf_exempt
@@ -483,6 +558,23 @@ def get_access_token(username,password):
           return json.dumps({"msg":"Something went wrong in get access token"})
 
 
+class DataTransfer(generics.ListAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+
+     def get(self, request, *args, **kwargs):
+          try:
+               data = self.list(request, *args, **kwargs).data
+               url = f"{settings.LIVE_URL}/data_retrieve2/"
+               headers = {'Content-Type': 'application/json'}
+               response = requests.post(url, data=json.dumps(data), headers=headers).json()
+               return JsonResponse(response)
+          except Exception as e:
+               print(e)
+               manager.create_from_exception(e)
+               return JsonResponse({"msg":"Something went wrong in data transfer"})
+
 @csrf_exempt
 def data_transfer(request):
      try:
@@ -493,10 +585,30 @@ def data_transfer(request):
           url = f"{settings.LIVE_URL}/premiear/data_retrieve/"
           headers = {'Content-Type': 'application/json'}
           response = requests.post(url, data=movies_info, headers=headers)
-          return JsonResponse({"msg":"csv create succesfully"})
+          return response
      except Exception as e:
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Something went wrong in data transfer"})
+
+
+class DataRetrieve(generics.CreateAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def create(self, request):
+          try:
+               data = request.data
+               old_data = self.get_queryset().values_list("name", flat=True)
+               new_data = [data for data in data if data["name"] not in old_data]
+               add_new_movie = [name["name"] for name in new_data]
+               serializer = self.get_serializer(data=new_data, many=True)
+               serializer.is_valid(raise_exception=True)
+               self.perform_create(serializer)
+               return JsonResponse({"msg":"Data transfer and retrieve successfully","total_add_movie":len(add_new_movie),"add_new_movie":add_new_movie})
+          except Exception as e:
+               print(e)
+               manager.create_from_exception(e)
+               return JsonResponse({"msg":"Something went wrong in data transfer"})
 
 
 @csrf_exempt
@@ -549,18 +661,55 @@ def data_retrieve(request):
           return JsonResponse({"msg":"Something went wrong in data transfer"})
 
 
+class DownloadCSV(ListAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def list(self, requests):
+          try:
+               queryset = self.get_serializer(self.get_queryset(), many=True).data
+               data = pd.DataFrame(queryset)
+               response = HttpResponse(content_type='text/csv')
+               response["Content-Disposition"] = 'attachment; filename="MovieInfo.csv"'
+               data.to_csv(response,index=False)
+               return response
+          except Exception as e:
+               manager.create_from_exception(e)
+               return JsonResponse({"msg":"Somthing wrong on download csv"})
+
+
 @csrf_exempt
 def download_csv(request):
-    try:
-        queryset = list(MovieInfo.objects.all().values())
-        data = pd.DataFrame(queryset)
-        response = HttpResponse(content_type='text/csv')
-        response["Content-Disposition"] = 'attachment; filename="MovieInfo.csv"'
-        data.to_csv(response,index=False)
-        return response
-    except Exception as e:
+     try:
+          queryset = list(MovieInfo.objects.all().values())
+          data = pd.DataFrame(queryset)
+          response = HttpResponse(content_type='text/csv')
+          response["Content-Disposition"] = 'attachment; filename="MovieInfo.csv"'
+          data.to_csv(response,index=False)
+          return response
+     except Exception as e:
           manager.create_from_exception(e)
           return JsonResponse({"msg":"Somthing wrong on download csv"})
+
+
+class CsvToModal(generics.CreateAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def create(self, request):
+          try:
+               na_values_list = ['NaN', 'N/A', 'null', 'nan']
+               df = pd.read_csv("/home/user/AdminPanel/Backend/AdminPanel/MovieInfo (2).csv",na_values=na_values_list, keep_default_na=False)
+               df = df.replace('', None)
+               result = df.to_dict(orient='records')
+               serializer = self.get_serializer(data =result, many=True)
+               serializer.is_valid(raise_exception=True)
+               self.perform_create(serializer)
+               return JsonResponse({"msg":"Data insert successfully."})
+          except Exception as e:
+               manager.create_from_exception(e)
+               print(e)
+               return JsonResponse({"msg":"Somthing wrong on download csv"})
 
 
 @csrf_exempt
@@ -568,7 +717,7 @@ def csv_to_modal(request):
      try:
           with transaction.atomic():
                na_values_list = ['NaN', 'N/A', 'null', 'nan']
-               df = pd.read_csv("C:/Users/Admin/Downloads/MovieInfo.csv",na_values=na_values_list, keep_default_na=False)
+               df = pd.read_csv("/home/user/AdminPanel/Backend/AdminPanel/MovieInfo (1).csv",na_values=na_values_list, keep_default_na=False)
                result = df.to_dict(orient='records')
                bulk_list =[]
                for res in result:
@@ -584,7 +733,29 @@ def csv_to_modal(request):
                return JsonResponse({"msg":"Data insert successfully."})
      except Exception as e:
           manager.create_from_exception(e)
+          print(e)
           return JsonResponse({"msg":"Somthing wrong on download csv"})
+
+
+class AppInfoView(ModelViewSet):
+     queryset = AppInfo.objects.all()
+     serializer_class = AppInfoSerializer
+
+     def list(self, request):
+          try:
+               device_id = request.data["device_id"]
+               device_name = request.data["type"]
+               device_name = self.queryset.get(device = device_name)
+               report, created = Report.objects.get_or_create(device_id=device_id, device_name=device_name, defaults={'first_login_date': datetime.now(),'last_login_date': datetime.now()})
+               if not created:
+                    report.last_login_date= datetime.now()
+                    report.save()
+               queryset = self.get_queryset()
+               data_ = {data["device"]: data for data in queryset.values()}
+               return HttpResponse(json.dumps({"data":data_, "status": 1, "message": "App information"}))
+          except Exception as e:
+               manager.create_from_exception(e)
+               return HttpResponse(json.dumps({"data":[], "status": 0, "message": str(e)}))
 
 
 @csrf_exempt
