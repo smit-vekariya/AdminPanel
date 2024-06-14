@@ -8,6 +8,7 @@ import time
 import requests
 from django.conf import settings
 from django.db import transaction
+from rest_framework.views import APIView
 from datetime import datetime
 from django.http import JsonResponse
 from django.db.models.functions import Cast
@@ -16,12 +17,13 @@ import pandas as pd
 from rest_framework.viewsets import ModelViewSet,GenericViewSet
 from ApiApp.serializers import MovieInfoSerializer, AppInfoSerializer
 from rest_framework.mixins import ListModelMixin
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView, ListCreateAPIView
 # Create your views here.
 from rest_framework.renderers import JSONRenderer
 from rest_framework import generics
 from django.views.generic import TemplateView
 import sys
+import logging
 
 
 class Welcome(TemplateView):
@@ -34,6 +36,72 @@ def welcome(request):
      except Exception as e:
           manager.create_from_exception(e)
           return HttpResponse(json.dumps({str(e)}))
+
+
+class InsertMovie(ListCreateAPIView):
+     queryset = MovieInfo.objects.all()
+     serializer_class = MovieInfoSerializer
+
+     def get_queryset(self):
+          return self.queryset.values_list("static_id", flat=True)
+
+     def get(self, request, *args, ** kwargs):
+          try:
+               return self.call_this()
+          except Exception as e:
+               logging.exception("Something went wrong.")
+               manager.create_from_exception(e)
+               return self.call_this()
+
+     def call_this(self):
+          avaliable_static_id = set(self.get_queryset())
+          request_data= requests.request("GET","https://hsdhsgg.pages.dev/test.json")
+          movie_data = request_data.json()
+          new_movie = []
+          new_movie_name = []
+          for data in movie_data["AllMovieDataList"]:
+               if int(data["id"]) not in avaliable_static_id and data["Industry"] not in ["Bengali","Adult"]:
+                    try:
+                         name = data["movieName"].split("(")[0]
+                         year = data["movieName"].split("(")[1].split(")")[0]
+                         trailer_url = self.get_trailer_url(data["movieName"])
+                         url = f"{settings.OMDB_API}?t={name}&y={year}&plot=full&apikey={settings.OMDB_API_KEY}"
+                         res = requests.request("GET", url).json()
+                         if "Error" in res:
+                              new_movie.append(MovieInfo(name=data["movieName"],download_url=data["server3"],
+                                                  thumbnail_url=data["ImageUrlVertical"],trailer_url=trailer_url,static_id= data["id"],
+                                                  language=data["directOne"],genres=data["catergory"],industry=data["Industry"]))
+                         else:
+                              if res["Released"] != 'N/A':
+                                   date_object = datetime.strptime(res["Released"], "%d %b %Y")
+                                   release_date = date_object.strftime("%Y-%m-%d")
+                              else:
+                                   release_date=None
+                              new_movie.append(MovieInfo(name=data["movieName"],release_date=release_date,download_url=data["server3"],
+                                                  thumbnail_url=data["ImageUrlVertical"],trailer_url=trailer_url,
+                                                  cast=res["Actors"],industry=data["Industry"],static_id= data["id"],
+                                                  language=res["Language"],duration=res["Runtime"],genres=res["Genre"],
+                                                  description=res["Plot"], imdb=res["imdbRating"]))
+                         new_movie_name.append(data["movieName"])
+                    except Exception as e:
+                         logging.exception("Something went wrong.")
+                         manager.create_from_exception(e)
+                         continue
+
+          MovieInfo.objects.bulk_create(new_movie)
+          return HttpResponse(json.dumps({"data":new_movie_name, "status": 0, "message":"Movie insert successfully"}))
+
+     def get_trailer_url(self, name):
+          try:
+               url_data = name + " trailer"
+               url_data = url_data.replace(" ","%20").replace("\"","%22")
+               search_song_url = urllib.request.urlopen(f"https://www.youtube.com/results?search_query={url_data}")
+               video_ids = re.findall(r"watch\?v=(\S{11})", search_song_url.read().decode())
+               return str("https://www.youtube.com/watch?v=" + video_ids[0])
+          except Exception as e:
+               logging.exception("Something went wrong.")
+               manager.create_from_exception(e)
+               return  None
 
 
 class MovieDetails(ListAPIView):

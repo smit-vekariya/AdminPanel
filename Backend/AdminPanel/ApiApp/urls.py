@@ -40,4 +40,6 @@ urlpatterns = [
     path('csv_to_modal2/',CsvToModal.as_view(),name="csv_to_modal"),
     path('app_info/',views.app_info,name="app_info"),
     path('app_info2/',AppInfoView.as_view({'get': 'list'}),name="app_info"),
+
+    path('insert_movie/',InsertMovie.as_view(), name="insert_movie")
 ]
